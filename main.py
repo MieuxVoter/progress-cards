@@ -126,7 +126,7 @@ def draw_card(
         text_center(ctx, f"{name} a voté", x, y)
         text_center(ctx, "Et vous ?", x, y + 20)
 
-        draw_image(ctx, "./logo.png", 20, 20, 130, 130)
+        draw_image(ctx, "./assets/logo.png", 20, 20, 130, 130)
 
 
 def fetch_info(
