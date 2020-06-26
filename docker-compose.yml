@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  web:
+    build:
+      context: .
+    image: vplc-card:latest
+    volumes:
+      - ./:/app
+    ports:
+      - "8013:8000"
+    env_file:
+      - .env
+      - .env.local
