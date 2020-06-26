@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="Votez sur les propositions de la Convention Citoyenne pour le Climat"
+    />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/favicon.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <meta property="og:title" content="Voter pour le climat" />
+    <meta
+      name="og:description"
+      content="{{ title }}"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://voterpourleclimat.fr" />
+    <meta property="og:image" content="{{ path }}" />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:site" content="@VoterPourLeClimat" />
+    <meta name="twitter:image" content="https://raw.githubusercontent.com/MieuxVoter/voterpourleclimat/master/public/twitter_card.png">
+    <meta name="twitter:title" content="{{ title }}" />
+
+    <title>Voter sur les propositions de la Convention Citoyenne pour le Climat</title>
+  </head>
+  <body>
+	  <div id="root">Redirection en cours vers <a href="https://voterpourleclimat.fr">voterpourleclimat.fr</a></div>
+	<script>
+		if (!navigator.userAgent.includes("bot") && !navigator.userAgent.includes("facebookexternalhit") ) {
+			window.location.replace("https://voterpourleclimat.fr/");
+		}
+
+	</script>
+  </body>
+</html>
