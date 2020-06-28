@@ -17,18 +17,59 @@
       content="{{ title }}"
     />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://voterpourleclimat.fr" />
+    <meta property="og:url" content="https://progress.voterpourleclimat.com/card/{{ uid }}" />
     <meta property="og:image" content="{{ path }}" />
+    <meta property="og:image:width" content="300" />
+    <meta property="og:image:height" content="200" />
 
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:site" content="@VoterPourLeClimat" />
     <meta name="twitter:image" content="https://raw.githubusercontent.com/MieuxVoter/voterpourleclimat/master/public/twitter_card.png">
     <meta name="twitter:title" content="{{ title }}" />
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.8.6/semantic.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.8.6/semantic.min.js"></script>
+
+<style type="text/css">
+    body {
+      background-color: #03b37f;
+    }
+    body > .grid {
+      height: 100%;
+    }
+    .column {
+      max-width: 450px;
+    }
+  </style>
+
     <title>Voter sur les propositions de la Convention Citoyenne pour le Climat</title>
   </head>
   <body>
-	  <div id="root">Redirection en cours vers <a href="https://voterpourleclimat.fr">voterpourleclimat.fr</a></div>
+
+	  <div class="ui middle aligned center aligned grid">
+  <div class="column">
+<div class="ui segment">
+    <h2 class="ui image header">
+      <div class="content">
+	      <a style="color: #03b37f" href="https://voterpourleclimat.fr">Redirection en cours</a>
+      </div>
+    </h2>
+      <h3>
+      	150 citoyens, 149 propositions émises
+      </h3>
+</p>
+<p>
+La Convention Citoyenne pour le Climat vient de rendre publiques ses propositions afin de réduire les émissions françaises de gaz à effet de serre d'au moins 40 % d'ici 2030 (par rapport à 1990) dans un esprit de justice sociale.
+</p>
+
+<p>
+<a href="https://voterpourleclimat.fr">Votez</a> sur ces propositions pour faire entendre votre voix.
+Atteignons 100 000 participants et 1 000 000 de votes enregistrés.
+      </p>
+  </div>
+</div>
+      </div>
 	<script>
 		if (!navigator.userAgent.includes("bot") && !navigator.userAgent.includes("facebookexternalhit") ) {
 			window.location.replace("https://voterpourleclimat.fr/");
