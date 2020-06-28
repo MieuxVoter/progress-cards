@@ -5,13 +5,13 @@ import argparse
 import time
 import os
 import glob
-from typing import Tuple, List, Dict
+from typing import Tuple, List, Dict, Optional
 from io import BytesIO
 import math
 import cairo
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
-from flask import Flask, render_template
+from flask import Flask, render_template, send_from_directory, abort
 
 
 COLLECTION_NAMES = (
@@ -22,6 +22,9 @@ COLLECTION_NAMES = (
     "consommer",
     "produire",
 )
+
+class DoesNotExistError(Exception):
+    pass
 
 
 def text_center(ctx, text, center_x, center_y):
@@ -123,7 +126,7 @@ def draw_card(
         ctx.set_source_rgb(0.6, 0.6, 0.6)
         x = image_size[0] / 2
         y = image_size[1] - 30
-        text_center(ctx, f"{name} a voté", x, y)
+        text_center(ctx, f"{name.title()} a voté", x, y)
         text_center(ctx, "Et vous ?", x, y + 20)
 
         draw_image(ctx, "./assets/logo.png", 20, 20, 130, 130)
@@ -135,6 +138,9 @@ def fetch_info(
     client = firestore.client()
 
     user = client.collection("user").document(uid).get().to_dict()
+    if user is None:
+        raise DoesNotExistError()
+
     name = user["name"]
     counter = 0
 
@@ -148,15 +154,20 @@ def fetch_info(
     return name, progress
 
 
-def is_card_uptodate(uid: str, max_timestamp: int):
+def find_card(uid: str):
     """
     It assumes that only one card is available
     """
     filenames = list(glob.glob(f"{uid}-*.svg"))
     if len(filenames) == 0:
-        return False
+        return None
     assert len(filenames) == 1, "Please clean up"
-    timestamp = int(filenames[0].split("-")[-1][:-4])
+    return filenames[0]
+
+def is_card_uptodate(filename: Optional[str], max_timestamp: int):
+    if filename is None:
+        return False
+    timestamp = int(filename.split("-")[-1][:-4])
     return timestamp > max_timestamp
 
 
@@ -177,22 +188,26 @@ cred = credentials.Certificate(os.environ["FIREBASE_CREDENTIALS"])
 firebase_admin.initialize_app(cred)
 
 
+@app.route("/card/<uid>/refresh")
+def get_card_with_refresh(uid: str):
+    return get_card(uid, refresh=True)
+
 @app.route("/card/<uid>")
-def get_card(uid):
+def get_card(uid: str, refresh=False):
     if not is_valid_uid(uid):
         return "Invalid uid", 400
 
     timestamp = int(time.time())
+    filename = find_card(uid)
 
-    is_card_uptodate(uid, timestamp - 3600)
-    name, progress = fetch_info(uid)
-    filename = f"cards/{uid}-{timestamp}.svg"
-    print(filename)
-    draw_card(name, progress, filename)
-    clean_card(uid)
+    try:
+        name, progress = fetch_info(uid)
+    except DoesNotExistError:
+        abort(404)
 
-    return render_template(
-        "opengraph.html",
-        title=f"{name} a voté sur {progress} % des mesures sur VoterPourLeClimat.fr. A votre tour !",
-        path=filename,
-    )
+    if refresh or not is_card_uptodate(filename, timestamp - 3600):
+        filename = f"{uid}-{timestamp}.svg"
+        draw_card(name, progress, f"cards/{filename}")
+        clean_card(uid)
+
+    return send_from_directory("cards", filename=filename, as_attachment=False)
