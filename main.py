@@ -27,7 +27,24 @@ class DoesNotExistError(Exception):
     pass
 
 
-def text_center(ctx, text, center_x, center_y):
+def fill_rectangle(ctx, x, y, w, h, color):
+    pat = cairo.LinearGradient(0.0, 0.0, 0.0, 1.0)
+    pat.add_color_stop_rgba(1, *color, 1.0)  # First stop, 50% opacity
+
+    ctx.move_to(0, 0)
+    ctx.rectangle(x, y, w, h)
+    ctx.set_source(pat)
+    ctx.fill()
+
+
+def text_highlight(ctx, text, x, y, highlight, offset=3):
+    (_, dy, width, height, _, _) = ctx.text_extents(str(text))
+    fill_rectangle(ctx, x - offset, y - offset + dy, width + offset + 5, height + offset, highlight)
+
+
+def text_center(ctx, text, center_x, center_y, color=None):
+    if color is not None:
+        ctx.set_source_rgb(*color)
     (x, y, width, height, dx, dy) = ctx.text_extents(text)
     ctx.move_to(center_x - width / 2, center_y)
     ctx.show_text(text)
@@ -79,7 +96,11 @@ def draw_progress(
     ctx.stroke()
 
 
-def text(ctx, text, x, y):
+def text(ctx, text, x, y, highlight=None, color=None):
+    if highlight is not None:
+        text_highlight(ctx, text, x, y, highlight)
+    if color is not None:
+        ctx.set_source_rgb(*color)
     ctx.move_to(x, y)
     ctx.show_text(str(text))
     ctx.stroke()
@@ -91,21 +112,20 @@ def draw_card(
     filename: str,
     image_size: Tuple[int, int] = (300, 200),
     rgb: Tuple[float, float, float] = (0.011, 0.701, 0.498),
-    progress_center: Tuple[int, int] = (220, 80),
+    progress_center: Tuple[int, int] = (240, 80),
     progress_radius: int = 50,
 ):
+    dark_green = (0, 0.56, 0.39)
     with cairo.SVGSurface(filename, *image_size) as surface:
 
         ctx = cairo.Context(surface)
         ctx.scale(1, 1)  # Normalizing the canvas
 
-        pat = cairo.LinearGradient(0.0, 0.0, 0.0, 1.0)
-        pat.add_color_stop_rgba(1, *rgb, 1.0)  # First stop, 50% opacity
+        fill_rectangle(ctx, 0, 0, image_size[0], image_size[1], rgb)
 
-        ctx.rectangle(0, 0, image_size[0], image_size[1] - 50)
-        ctx.set_source(pat)
-        ctx.fill()
+        ctx.select_font_face("Noto Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
 
+        # Display progress
         draw_progress(
             ctx,
             progress,
@@ -114,22 +134,27 @@ def draw_card(
             fill=rgb,
             line_color=(1, 1, 1),
         )
-
-        ctx.select_font_face("Roboto", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
-
         ctx.set_font_size(25)
         ctx.set_source_rgb(*rgb)
         text(ctx, int(progress * 100), progress_center[0] - 20, progress_center[1] + 7)
         ctx.set_font_size(15)
         text(ctx, " %", progress_center[0] + 10, progress_center[1] + 7)
 
-        ctx.set_source_rgb(0.6, 0.6, 0.6)
-        x = image_size[0] / 2
-        y = image_size[1] - 30
-        text_center(ctx, f"{name.title()} a voté", x, y)
-        text_center(ctx, "Et vous ?", x, y + 20)
+        # Left-side text
+        start = 60
+        jump = 25
+        text(ctx, str(name).title(), 20, start, highlight=dark_green, color=(1,1,1))
+        text(ctx, "a voté pour le Climat", 20, start + jump, highlight=(0, 0.56, 0.39), color=(1,1,1))
+        text(ctx, "Pourquoi pas vous ?", 20, start + jump * 2, highlight=(0, 0.56, 0.39), color=(1,1,1))
 
-        draw_image(ctx, "./assets/logo.png", 20, 20, 130, 130)
+
+        # Footer
+        ctx.set_source_rgb(0., 0., 0.)
+        x = image_size[0] / 2
+        y = image_size[1] - 15
+        text_center(ctx, "www.VoterPourLeClimat.fr", x, y, color=(1,1,1))
+
+        # draw_image(ctx, "./assets/logo.png", 20, 20, 130, 130)
 
 
 def fetch_info(
