@@ -110,13 +110,14 @@ def draw_card(
     name: str,
     progress: float,
     filename: str,
-    image_size: Tuple[int, int] = (300, 200),
+    image_size: Tuple[int, int] = (600, 315),
     rgb: Tuple[float, float, float] = (0.011, 0.701, 0.498),
-    progress_center: Tuple[int, int] = (240, 80),
-    progress_radius: int = 50,
+    progress_center: Tuple[int, int] = (0.80, 0.45),
+    progress_radius: int = 80,
 ):
     dark_green = (0, 0.56, 0.39)
     surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, *image_size)
+    progress_center = [round(center * size) for center, size in zip(progress_center, image_size)]
 
     ctx = cairo.Context(surface)
     ctx.scale(1, 1)  # Normalizing the canvas
@@ -134,15 +135,15 @@ def draw_card(
         fill=rgb,
         line_color=(1, 1, 1),
     )
-    ctx.set_font_size(25)
+    ctx.set_font_size(45)
     ctx.set_source_rgb(*rgb)
-    text(ctx, int(progress * 100), progress_center[0] - 20, progress_center[1] + 7)
-    ctx.set_font_size(15)
-    text(ctx, " %", progress_center[0] + 10, progress_center[1] + 7)
+    text(ctx, int(progress * 100), progress_center[0] - 40, progress_center[1] + 7)
+    ctx.set_font_size(35)
+    text(ctx, " %", progress_center[0], progress_center[1] + 7)
 
     # Left-side text
-    start = 60
-    jump = 25
+    start = 90
+    jump = 55
     text(ctx, str(name).title(), 20, start, highlight=dark_green, color=(1,1,1))
     text(ctx, "a voté pour le climat", 20, start + jump, highlight=(0, 0.56, 0.39), color=(1,1,1))
     text(ctx, "Pourquoi pas vous ?", 20, start + jump * 2, highlight=(0, 0.56, 0.39), color=(1,1,1))
@@ -184,16 +185,16 @@ def find_card(uid: str):
     """
     It assumes that only one card is available
     """
-    filenames = list(glob.glob(f"{uid}-*.png"))
+    filenames = list(glob.glob(f"cards/{uid}.*.png"))
     if len(filenames) == 0:
         return None
     assert len(filenames) == 1, "Please clean up"
-    return filenames[0]
+    return filenames[0].split("/")[-1]
 
 def is_card_uptodate(filename: Optional[str], max_timestamp: int):
     if filename is None:
         return False
-    timestamp = int(filename.split("-")[-1][:-4])
+    timestamp = int(filename.split(".")[1])
     return timestamp > max_timestamp
 
 
@@ -202,7 +203,7 @@ def is_valid_uid(uid: str):
 
 
 def clean_card(uid):
-    filenames = list(glob.glob(f"cards/{uid}-*.png"))
+    filenames = list(glob.glob(f"cards/{uid}.*.png"))
     latest_file = max(filenames, key=os.path.getctime)
     for filename in filenames:
         if filename != latest_file:
@@ -217,7 +218,7 @@ firebase_admin.initialize_app(cred)
 @app.route("/card/<uid>")
 def view_card_html(uid: str):
     card = get_card(uid, refresh=False)
-    return render_template("opengraph.html", path=f"https://progress.voterpourleclimat.com/image/{uid}.png", title="J'ai voté pour le climat, et vous ?", uid=uid)
+    return render_template("opengraph.html", path=f"https://progress.voterpourleclimat.com/image/{card['filename']}", title="J'ai voté pour le climat, et vous ?", uid=uid)
 
 
 @app.route("/image/<uid>")
@@ -237,7 +238,7 @@ def get_card(uid: str, refresh=False):
     if refresh or not is_card_uptodate(filename, timestamp - 3600):
         try:
             name, progress = fetch_info(uid)
-            filename = f"{uid}-{timestamp}.png"
+            filename = f"{uid}.{timestamp}.png"
             draw_card(name, progress, f"cards/{filename}")
             clean_card(uid)
         except DoesNotExistError:
