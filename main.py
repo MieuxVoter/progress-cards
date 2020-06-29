@@ -237,14 +237,12 @@ def get_card(uid: str, refresh=False):
     if refresh or not is_card_uptodate(filename, timestamp - 3600):
         try:
             name, progress = fetch_info(uid)
+            filename = f"{uid}-{timestamp}.png"
+            draw_card(name, progress, f"cards/{filename}")
+            clean_card(uid)
         except DoesNotExistError:
-            abort(404)
-
-        filename = f"{uid}-{timestamp}.png"
-        draw_card(name, progress, f"cards/{filename}")
-        clean_card(uid)
+            filename = "default.jpg"
 
     return {
         "filename": filename,
-    #    "name": name,
     }
